@@ -1,33 +1,26 @@
+##########################################################################################
+# Servicio Web para consulta de Datos Meteorologicos generados por el modelo WRF y creado
+# por personal del Cevarcam (FICH, UNL)
+#
+# El servicio web es del tipo REST JSON y es fundamental que el archivo de datos se haya
+# copiado correctamente
+#
+# Autor: Emiliano Sangoi
+#
+# Docs utiles
+# Referencia NetCDF4
+#   http://unidata.github.io/netcdf4-python
+##########################################################################################
+
+
 from flask import Flask
-from funciones import hola, getVariables, checkEstado
+
 app = Flask(__name__)
 
-@app.route("/")
-def indexAction():
-	r = hola()
-	return r
-	#return "Hello World!!!"
-
-# Muestra las variables existenes
-@app.route("/variables")
-def variablesAction():
-	return getVariables()
-
-@app.route("/estado")
-def estadoAction():
-	return checkEstado()
-
-@app.route("/temperatura")
-def temperatura_home():
-	return "Home de temperatura"
-
-@app.route("/precipitacion")
-def precipitacion_home():
-	return "Home de precipitacion"
-
-@app.route("/viento")
-def viento_home():
-	return "Home de viento"
+from routes.app_routes import *
+from routes.temperatura_routes import *
+from routes.precipitacion_routes import *
+from routes.viento_routes import *
 
 if __name__ == '__main__':
 	app.run(port=5000,  debug=True)
