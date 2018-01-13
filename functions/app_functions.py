@@ -3,10 +3,21 @@ import json
 
 
 def getVariablesMeteorologicas():
-    return getVariables()
+    variables = get_variables()
+    return json.dumps(variables)
 
-def verificarEstado():
-    return checkEstado()
+def getEstado():
+    estado = check_estado()
+    return json.dumps(estado)
 
 def getDimensiones():
-    return getDimensions()
+    dimensiones = get_dimensiones()
+    return json.dumps(dimensiones)
+
+def getLatLngs():
+    lat_lng = get_lat_long();
+    return json.dumps(lat_lng);
+
+def getLimiteRect():
+    limites = get_limites_rect()
+    return json.dumps(limites)

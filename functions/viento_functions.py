@@ -5,4 +5,5 @@ import json
 
 
 def viento_valores():
-    return variable_valores('vientov')
+    res = variable_valores('vientov')
+    return json.dumps(res)

@@ -4,4 +4,5 @@ import json
 #------------------------------------------------------------------------------------------------------------------
 
 def precipitacion_valores():
-    return variable_valores('precip')
+    res = variable_valores('precip')
+    return json.dumps(res)

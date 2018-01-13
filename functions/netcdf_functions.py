@@ -4,12 +4,19 @@
 # Refs:
 #   http://unidata.github.io/netcdf4-python/
 #   http://flask.pocoo.org/docs/0.12/
+#   netcdf date to datetime:
+#       http://forum.marine.copernicus.eu/discussion/428/how-to-convert-netcdf-time-to-python-datetime-resolved/p1
+#   Masked array:
+#       https://docs.scipy.org/doc/numpy-1.13.0/reference/maskedarray.baseclass.html
 #
 #
+# Posicion geo. para realizar pruebas:
+#   -31.6265705,-60.7324942
 
-from netCDF4 import Dataset
+from netCDF4 import Dataset, num2date
 from pprint import pprint
 import json
+import datetime
 
 
 #------------------------------------------------------------------------------------------------------------------
@@ -17,13 +24,18 @@ import json
 #
 # Diccionarios en Python
 # https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-def checkEstado(asJson=True):
-    archivo = getArchivoDatos()
-    estado = {'archivo': archivo['nombre'], 'errores': [], 'estado': 'OK',
-              'msg': "Para poder realizar consultas el estado del servicio debe ser OK."}
+def check_estado():
+    archivo = get_archivo_datos()
+    estado = {
+        'archivo': archivo['nombre'],
+        'errores': [],
+        'estado': 'OK',
+        'vers_archivo_datos' : get_version_archivo_datos(),
+        'msg': "Para poder realizar consultas el estado del servicio debe ser OK."
+    }
 
     # Abrir archivo:
-    fileHandler = openArchivoDatos()
+    fileHandler = abrir_archivo_datos()
 
     errores = []
     if fileHandler == False:
@@ -44,77 +56,154 @@ def checkEstado(asJson=True):
     if len(errores) > 0:
         estado['estado'] = 'NOT_OK'
 
-    if asJson == True:
-        return json.dumps(estado)
-    else:
-        return estado
+    return estado
 
 
 # ------------------------------------------------------------------------------------------------------------------
 # Devuelve informacion del archivo utilizado
-def getArchivoDatos():
+def get_archivo_datos():
     file = 'wrf_20170823_full.nc'
     # dev:
-    #return {'nombre': file, 'ruta': "../files/" + file}
+    # return {'nombre': file, 'ruta': "../files/" + file}
     # prod:
     return {'nombre': file, 'ruta': "files/" + file}
 
 
 # ------------------------------------------------------------------------------------------------------------------
 # Permite abrir un archivo de datos
-def openArchivoDatos():
-    archivo = getArchivoDatos()
+def abrir_archivo_datos():
+    archivo = get_archivo_datos()
     try:
         fileHandler = Dataset(archivo['ruta'], "r", format="NETCDF4")
         return fileHandler
     except IOError:
         pass
-
     return False
 
 
 # ------------------------------------------------------------------------------------------------------------------
 # Muestra las variables meteorologicas definidas en el archivo.
-def getVariables():
-    fileHandler = openArchivoDatos()
-    if fileHandler == False:
-        estado = checkEstado(False)
-        return json.dumps({'variables': [], 'estado': estado})
-    return json.dumps(fileHandler.variables.keys())
+def get_variables():
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        return fileHandler.variables.keys()
+    return False
+
 
 # ------------------------------------------------------------------------------------------------------------------
 # Muestra las dimensiones definidas en el archivo.
-def getDimensions():
-    fileHandler = openArchivoDatos()
-    if fileHandler == False:
-        estado = checkEstado(False)
-        return json.dumps({'dimensiones': [], 'estado': estado})
+def get_dimensiones():
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        return fileHandler.dimensions.keys()
+    return False
 
-    return json.dumps(fileHandler.dimensions.keys())
+
+# ------------------------------------------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------------------------------------------
 # Obtener
 def variable_valores(variable):
-    fileHandler = openArchivoDatos()
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        variableMet = fileHandler.variables[variable];
+        res = str(len(variableMet))
+        return res
+    return False
+
+
+# ------------------------------------------------------------------------------------------------------------------
+# Devuelve todos los valores correspondiente a la variable 'time' definidos como fechas en el formato datetime
+def get_times():
+    fileHandler = abrir_archivo_datos()
     if fileHandler == False:
-        estado = checkEstado(False)
-        return json.dumps({'dimensiones': [], 'estado': estado})
+        time = fileHandler.variables['time']
+        times = time[:]
+        t_unit = time.units # u'hours since 2017-08-23 00:00:00'
+        t_cal = time.calendar
+        tvalue = num2date(times, units = t_unit, calendar = t_cal)
+        return tvalue
+    return False
 
-    # si estoy aca es porque tuvo exito ...
-    variableMet = fileHandler.variables[ variable ];
-    res = str(len(variableMet))
+# ------------------------------------------------------------------------------------------------------------------
+# Devuelve las coordenadas correspondiente al limite inferior-izquierdo(SO) y superior-derecho (NE). Estos puntos
+# permiten delimitar la zona en donde se disponen valores. Por fuera de este rectangulo el modelo no calcula valores
+# mientras que por dentro se encuentran los valores pronosticados. Dentro del rectangulo pueden existir coordenadas
+# sin un valor asociado, esto se debe a que la zona pronosticada tiene forma de abanico.
+def get_limites_rect():
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        lon = fileHandler.variables['lon']
+        lat = fileHandler.variables['lat']
+        limites = {
+            'esq_suroeste' : { 'longitud' : min(lon), 'latitud' : min(lat) },
+            'esq_noreste' : { 'longitud' : max(lon), 'latitud' : max(lat) }
+        }
+        return limites
+    return False
 
-    return res
+# ------------------------------------------------------------------------------------------------------------------
+# Verifica que una coordenada pasada como parametro se encuentre dentro del limite rectangular
+def is_dentro(lat, lng):
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        lons = fileHandler.variables['lon']
+        lats = fileHandler.variables['lat']
+        lon_is_in = lng >= min(lons) and lng <= max(lons)
+        lat_is_in = lat >= min(lats) and lng <= max(lats)
+        return int(lon_is_in and lat_is_in)
+    return None
+
+def is_fuera(lat, lng):
+    return not is_dentro(lat, lng)
 
 
-file = openArchivoDatos()
+# ------------------------------------------------------------------------------------------------------------------
+# 
+
+# ------------------------------------------------------------------------------------------------------------------
+# Devuelve la version del archivo de datos en el formato YYYYMMDD
+def get_version_archivo_datos( asDatetime = False ):
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        time = fileHandler.variables['time']
+        t_unit = time.units  # u'hours since 2017-08-23 00:00:00'
+        t_cal = time.calendar
+        fecha = num2date(time[0], units=t_unit, calendar=t_cal)
+        if asDatetime == True:
+            return fecha
+        else:
+            return fecha.date().strftime("%Y%m%d")
+    return False
+
+
+# ------------------------------------------------------------------------------------------------------------------
+# Devuelve la version del archivo de datos en el formato YYYYMMDD
+def get_lat_long():
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        lat = fileHandler.variables['lat'];
+        lon = fileHandler.variables['lon'];
+        result = {
+            'latitudes' : lat[:].tolist(),
+            'longitudes' : lon[:].tolist()
+        };
+        return result
+
+    return False
+
+file = abrir_archivo_datos()
 if file <> False:
     #pprint(vars(file.dimensions))
     #pprint(file.dimensions)
     temp = file.variables['temperature'];
     pprint(temp.size)
-    pprint(temp.units)
-    pprint(temp[0][0][0].tolist())
+    #pprint(temp.units)
+    pprint(temp[0].size)
+    pprint(temp[0][0].size)
+    pprint(temp[0][0][0].size)
+    pprint(temp.ncattrs)
+    #pprint(temp[0][0].tolist())
     #pprint(file.file_format)
     #print file.dimensions.values()

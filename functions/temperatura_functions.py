@@ -3,4 +3,5 @@ import json
 
 #------------------------------------------------------------------------------------------------------------------
 def temperatura_valores():
-    return variable_valores("temperature")
+    res = variable_valores("temperature")
+    return json.dumps(res)
