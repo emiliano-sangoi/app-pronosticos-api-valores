@@ -1,5 +1,5 @@
 import functions.viento_functions
-from index import app
+from cevarcam_api import app
 
 @app.route("/viento")
 def viento_home():

@@ -1,5 +1,5 @@
 import functions.precipitacion_functions
-from index import app
+from cevarcam_api import app
 
 @app.route("/precipitacion")
 def precipitacion_home():

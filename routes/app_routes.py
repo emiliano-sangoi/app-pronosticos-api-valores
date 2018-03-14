@@ -4,7 +4,7 @@ from functions.precipitacion_functions import *
 from functions.viento_functions import *
 from flask import request, jsonify
 
-from index import app
+from cevarcam_api import app
 import json
 
 @app.route("/")

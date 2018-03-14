@@ -1,5 +1,5 @@
 from functions.temperatura_functions import *
-from index import app
+from cevarcam_api import app
 
 @app.route('/temperatura')
 def temperatura_home_action():
