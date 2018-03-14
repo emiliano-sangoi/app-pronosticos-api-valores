@@ -8,12 +8,14 @@
 #       http://forum.marine.copernicus.eu/discussion/428/how-to-convert-netcdf-time-to-python-datetime-resolved/p1
 #   Masked array:
 #       https://docs.scipy.org/doc/numpy-1.13.0/reference/maskedarray.baseclass.html
+#   http://www.scipy-lectures.org/intro/numpy/numpy.html#what-are-numpy-and-numpy-arrays
 #
 #
 # Posicion geo. para realizar pruebas:
 #   -31.6265705,-60.7324942
 
 from netCDF4 import Dataset, num2date
+from numpy import *
 from pprint import pprint
 import json
 import datetime
@@ -160,7 +162,104 @@ def is_fuera(lat, lng):
 
 
 # ------------------------------------------------------------------------------------------------------------------
-# 
+# Obtiene el punto existente mas cercano a la coordenada pasada como parametro. En caso de exito devuelve un diccionario con la
+# latitud y longitud elegida y la posicion de las mismas en los vectores de valores del archivo.
+# Si ocurrio un error devuelve False y si  el punto ingresado esta fuera de rango devuelve None
+def get_closest(lat, lng):
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        if is_fuera(lat, lng):
+            return None
+        # esta dentro del rec ...
+
+
+
+    return False
+
+# ------------------------------------------------------------------------------------------------------------------
+def buscar_coord_mas_cercana(val, data, verbose=False):
+
+    if data.size == 0:
+        return False
+
+    target = abs(val)
+
+    closest_pos = 0
+    closest_dif = abs( abs(data[closest_pos]) - target )
+
+    c = 0
+    #print "closest_dif = " + str(closest_dif) + " / closest_val = " + str(data[closest_pos])
+
+    for i in range(1, data.size):
+        dif = abs( abs(data[i]) - target )
+
+        if verbose:
+            print "current val:" + str(data[i]) + \
+                " / target = " + str(target) + \
+                " / current dif: " + str(dif)
+
+        if dif < closest_dif:
+            #print "viejo min:" + str(data[closest_pos]) + " - pos: " + str(closest_pos)
+            closest_pos = i
+            closest_dif = dif
+            #print "nuevo min:" + str(data[closest_pos]) + " - pos: " + str(closest_pos)
+            #print " -------------------------------------------------------------"
+
+    return {
+        'pos' : closest_pos,
+        'valor' : data[closest_pos],
+        'dif' : closest_dif
+    }
+
+# ------------------------------------------------------------------------------------------------------------------
+def get_serie(variable, la, lo):
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        variables = fileHandler.get_variables_by_attributes(name=variable)
+        if len(variables) == 0:
+            return False
+        lat = fileHandler.variables['lat']
+        lon = fileHandler.variables['lon']
+        closest_lat = buscar_coord_mas_cercana(la, lat)
+        closest_lon = buscar_coord_mas_cercana(lo, lon)
+        if closest_lat and closest_lon:
+            variable_obj = variables.pop()
+            xp = closest_lon['pos']
+            xv = closest_lon['valor']
+            yp = closest_lat['pos']
+            yv = closest_lat['valor']
+            serie = []
+            time = fileHandler.variables['time']
+            step = 0
+            nulos = 0
+            for i in range(0, time.size):
+                v = variable_obj[i][xp][yp]
+
+                if v is ma.masked:
+                    v = 'null'
+                    nulos=nulos+1
+                    break
+
+                serie.append({'n_sec': step, 'valor': str(v)})
+                step += 3
+
+            issued_time = get_version_archivo_datos(True);
+            return {
+                'lat': yv,
+                'lng': xv,
+                'lat_ref' : closest_lat['valor'],
+                'lng_ref' : closest_lon['valor'],
+                'lat_ref_pos' : closest_lat['pos'],
+                'lng_ref_pos' : closest_lon['pos'],
+                'serie' : serie,
+                'si_unidad' : str(variable_obj.units),
+                'issued_time' : int(issued_time.strftime('%s')),
+                'msg' : '' if nulos == 0 else 'Algunos valores son nulos. Esto se debe a que algunos valores no se conocen o no han sido pronosticados para las coordenadas requeridas.'
+            }
+    return False
+
+
+
 
 # ------------------------------------------------------------------------------------------------------------------
 # Devuelve la version del archivo de datos en el formato YYYYMMDD
@@ -179,7 +278,8 @@ def get_version_archivo_datos( asDatetime = False ):
 
 
 # ------------------------------------------------------------------------------------------------------------------
-# Devuelve la version del archivo de datos en el formato YYYYMMDD
+# Devuelve un listado de todas las latitudes y longitudes existentes en el archivo. Permite saber cuales son
+# los puntos de referencia existentes.
 def get_lat_long():
     fileHandler = abrir_archivo_datos()
     if fileHandler <> False:
@@ -193,17 +293,17 @@ def get_lat_long():
 
     return False
 
-file = abrir_archivo_datos()
-if file <> False:
-    #pprint(vars(file.dimensions))
-    #pprint(file.dimensions)
-    temp = file.variables['temperature'];
-    pprint(temp.size)
-    #pprint(temp.units)
-    pprint(temp[0].size)
-    pprint(temp[0][0].size)
-    pprint(temp[0][0][0].size)
-    pprint(temp.ncattrs)
-    #pprint(temp[0][0].tolist())
-    #pprint(file.file_format)
-    #print file.dimensions.values()
+# file = abrir_archivo_datos()
+# if file <> False:
+#     #pprint(vars(file.dimensions))
+#     #pprint(file.dimensions)
+#     temp = file.variables['temperature'];
+#     pprint(temp.size)
+#     #pprint(temp.units)
+#     pprint(temp[0].size)
+#     pprint(temp[0][0].size)
+#     pprint(temp[0][0][0].size)
+#     pprint(temp.ncattrs)
+#     #pprint(temp[0][0].tolist())
+#     #pprint(file.file_format)
+#     #print file.dimensions.values()

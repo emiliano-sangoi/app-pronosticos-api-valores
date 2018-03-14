@@ -1,4 +1,5 @@
 from functions.netcdf_functions import *
+
 import json
 
 
@@ -21,3 +22,4 @@ def getLatLngs():
 def getLimiteRect():
     limites = get_limites_rect()
     return json.dumps(limites)
+
