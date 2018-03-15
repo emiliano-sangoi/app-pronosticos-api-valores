@@ -3,6 +3,7 @@ from functions.temperatura_functions import *
 from functions.precipitacion_functions import *
 from functions.viento_functions import *
 from flask import request, jsonify
+import sys
 
 from cevarcam_api import app
 import json
@@ -15,7 +16,8 @@ def indexAction():
         "/estado" : "Devuelve informacion sobre el estado general del servicio web.",
         "/variable/serie" : "Devuelve los valores asociados a esa variable para los dias pronositicados. Para ver las variables disponibles ingresar a /variables",
         "/coords" : "Devuelve las latitudes y longitudes existentes.",
-        "/limites" : "Esquina inf. izq. y sup. der. correspondientes a los limites para los valores disponibles. Estas coordenadas pueden ser utilizadas para posicionar correctamente una imagen sobre un mapa."
+        "/limites" : "Esquina inf. izq. y sup. der. correspondientes a los limites para los valores disponibles. Estas coordenadas pueden ser utilizadas para posicionar correctamente una imagen sobre un mapa.",
+        "python-version": sys.version
     };
     return jsonify(rutas),200
 

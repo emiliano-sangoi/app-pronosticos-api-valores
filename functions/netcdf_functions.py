@@ -16,6 +16,7 @@
 
 from netCDF4 import Dataset, num2date
 from numpy import *
+import os
 from pprint import pprint
 import json
 import datetime
@@ -68,13 +69,15 @@ def get_archivo_datos():
     # dev:
     # return {'nombre': file, 'ruta': "../files/" + file}
     # prod:
-    return {'nombre': file, 'ruta': "files/" + file}
+    return {'nombre': file, 'ruta': "/var/www/html/cevarcam_api/files/" + file}
 
 
 # ------------------------------------------------------------------------------------------------------------------
 # Permite abrir un archivo de datos
 def abrir_archivo_datos():
-    archivo = get_archivo_datos()
+    archivo = get_archivo_datos();
+    #return os.path.exists(archivo['ruta']);
+    #return archivo;
     try:
         fileHandler = Dataset(archivo['ruta'], "r", format="NETCDF4")
         return fileHandler
