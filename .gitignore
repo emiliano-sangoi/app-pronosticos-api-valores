@@ -4,3 +4,4 @@ test.py
 functions/*.pyc
 routes/*.pyc
 cevarcam_api.pyc
+cevarcam_api.wsgi
