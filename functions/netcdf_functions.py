@@ -228,9 +228,7 @@ def get_serie(variable, la, lo):
         if closest_lat and closest_lon:
             variable_obj = variables.pop()
             xp = closest_lon['pos']
-            xv = closest_lon['valor']
             yp = closest_lat['pos']
-            yv = closest_lat['valor']
             serie = []
             time = fileHandler.variables['time']
             step = 0
@@ -247,18 +245,27 @@ def get_serie(variable, la, lo):
                 step += 3
 
             issued_time = get_version_archivo_datos(True);
-            return {
-                'lat': yv,
-                'lng': xv,
-                'lat_ref' : closest_lat['valor'],
-                'lng_ref' : closest_lon['valor'],
-                'lat_ref_pos' : closest_lat['pos'],
-                'lng_ref_pos' : closest_lon['pos'],
-                'serie' : serie,
-                'si_unidad' : str(variable_obj.units),
-                'issued_time' : int(issued_time.strftime('%s')),
-                'msg' : '' if nulos == 0 else 'Algunos valores son nulos. Esto se debe a que algunos valores no se conocen o no han sido pronosticados para las coordenadas requeridas.'
-            }
+        return {
+            # latitud ingresada como parametro:
+            'lat_ingresada': la,
+            # longitud ingresada como parametro:
+            'long_ingresada': lo,
+            # latitud mas cercana a la latitud ingresada:
+            'lat_ref' : closest_lat['valor'],
+            # longitud mas cercana a la longitud ingresada:
+            'lng_ref' : closest_lon['valor'],
+            # posicion de la latitud encontrada en en el vector:
+            'lat_ref_pos' : closest_lat['pos'],
+            # posicion de la longitud encontrada en en el vector:
+            'lng_ref_pos' : closest_lon['pos'],
+            # valores pronosticados:
+            'serie' : serie,
+            # unidad expresada en el sistema internacional:
+            'si_unidad' : str(variable_obj.units),
+            # tiempo de medicion:
+            'issued_time' : int(issued_time.strftime('%s')),
+            'msg' : '' if nulos == 0 else 'Algunos valores son nulos. Esto se debe a que algunos valores no se conocen o no han sido pronosticados para las coordenadas requeridas.'
+        }
     return False
 
 

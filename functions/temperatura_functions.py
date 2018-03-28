@@ -4,7 +4,6 @@ from functions.global_functions import *
 
 #------------------------------------------------------------------------------------------------------------------
 def get_serie_temperatura(la, lo):
-
     msgError = ''
     try:
         latitud = float(la)
