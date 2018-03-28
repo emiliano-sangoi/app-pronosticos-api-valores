@@ -14,7 +14,7 @@ def indexAction():
         "/variables" : "Devuelve las variables definidas en el archivo.",
         "/dimensiones" : "Devuelve las dimensiones definidas en el archivo.",
         "/estado" : "Devuelve informacion sobre el estado general del servicio web.",
-        "/variable/serie" : "Devuelve los valores asociados a esa variable para los dias pronositicados. Para ver las variables disponibles ingresar a /variables",
+        "/variable/serie?latitud=<lat>&longitud=<lng>" : "Devuelve los valores asociados a esa variable para los dias pronositicados. Para ver las variables disponibles ingresar a /variables",
         "/coords" : "Devuelve las latitudes y longitudes existentes.",
         "/limites" : "Esquina inf. izq. y sup. der. correspondientes a los limites para los valores disponibles. Estas coordenadas pueden ser utilizadas para posicionar correctamente una imagen sobre un mapa.",
         "python-version": sys.version
@@ -59,15 +59,26 @@ def get_valores_action(variable):
 
     latitud = request.args.get("latitud");
     longitud = request.args.get("longitud");
+
     msgError = ''
 
-    if variable == 'temperatura':
+    if variable == 'temperature':
          data, res = get_serie_temperatura(latitud, longitud)
          if res:
              return jsonify(data), 200
          msgError = res
-    elif variable == 'precipitacion':
+    elif variable == 'precip':
         data, res = get_serie_precipitacion(latitud, longitud)
+        if res:
+            return jsonify(data), 200
+        msgError = res
+    elif variable == 'vientov':
+        data, res = get_serie_vientov(latitud, longitud)
+        if res:
+            return jsonify(data), 200
+        msgError = res
+    elif variable == 'vientou':
+        data, res = get_serie_vientou(latitud, longitud)
         if res:
             return jsonify(data), 200
         msgError = res
