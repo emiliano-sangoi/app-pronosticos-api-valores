@@ -1,3 +1,5 @@
+from flask import jsonify
+
 from netcdf_functions import *
 from functions.global_functions import *
 
@@ -8,7 +10,9 @@ def get_serie_temperatura(la, lo):
     try:
         latitud = float(la)
         longitud = float(lo)
-        res = get_serie("temperature", latitud, longitud);
+
+
+        res = get_serie("temp", latitud, longitud);
 
         return res, True;
     except ValueError:
