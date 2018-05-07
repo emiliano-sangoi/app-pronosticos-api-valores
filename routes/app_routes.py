@@ -60,11 +60,15 @@ def get_valores_action(variable):
     latitud = request.args.get("latitud");
     longitud = request.args.get("longitud");
 
+    # pprint(latitud);
+    # exit(-1);
+
     msgError = ''
 
-    if variable == 'temperature':
+    if variable == 'temp':
          data, res = get_serie_temperatura(latitud, longitud)
          if res:
+             data['si_unidad'] = 'C';
              return jsonify(data), 200
          msgError = res
     elif variable == 'precip':

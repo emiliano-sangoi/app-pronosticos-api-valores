@@ -66,6 +66,7 @@ def check_estado():
 # Devuelve informacion del archivo utilizado
 def get_archivo_datos():
     file = 'wrf_20170823_full.nc'
+    file = 'wrf_20180504.nc'
     # dev:
     # return {'nombre': file, 'ruta': "../files/" + file}
     # prod:
@@ -261,7 +262,8 @@ def get_serie(variable, la, lo):
             # valores pronosticados:
             'serie' : serie,
             # unidad expresada en el sistema internacional:
-            'si_unidad' : str(variable_obj.units),
+            'si_unidad' : '',
+            #'si_unidad' : str(variable_obj.units),
             # tiempo de medicion:
             'issued_time' : int(issued_time.strftime('%s')),
             'msg' : '' if nulos == 0 else 'Algunos valores son nulos. Esto se debe a que algunos valores no se conocen o no han sido pronosticados para las coordenadas requeridas.'
