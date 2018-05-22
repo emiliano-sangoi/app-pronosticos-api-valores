@@ -95,3 +95,15 @@ def get_valores_action(variable):
     # elif variable == 'precipitacion':
      #    return precipitacion_valores()
 	# return
+
+@app.route('/series')
+def get_series_action():
+
+    latitud = float(request.args.get("latitud"));
+    longitud = float(request.args.get("longitud"));
+
+    data = get_series(latitud, longitud)
+
+    if data != False:
+        return jsonify(data), 200
+    return jsonify("Ocurrio un error al intentar obtener los datos."), 500
