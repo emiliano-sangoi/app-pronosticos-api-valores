@@ -20,6 +20,7 @@ import os
 from pprint import pprint
 import json
 import datetime
+import socket
 
 
 #------------------------------------------------------------------------------------------------------------------
@@ -65,11 +66,13 @@ def check_estado():
 # ------------------------------------------------------------------------------------------------------------------
 # Devuelve informacion del archivo utilizado
 def get_archivo_datos():
-    file = 'wrf_20170823_full.nc'
-    file = 'wrf_20180504.nc'
-    # dev:
-    # return {'nombre': file, 'ruta': "../files/" + file}
+    file = 'wrf_prod.nc'
+
     # prod:
+    if(socket.gethostname() == 'fich.unl.edu.ar'):
+        return {'nombre': file, 'ruta': "/home/cevarcam/upload/" + file}
+
+    # dev:
     return {'nombre': file, 'ruta': "/var/www/html/cevarcam_api/files/" + file}
 
 
@@ -176,8 +179,6 @@ def get_closest(lat, lng):
             return None
         # esta dentro del rec ...
 
-
-
     return False
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -192,7 +193,6 @@ def buscar_coord_mas_cercana(val, data, verbose=False):
     closest_dif = abs( abs(data[closest_pos]) - target )
 
     c = 0
-    #print "closest_dif = " + str(closest_dif) + " / closest_val = " + str(data[closest_pos])
 
     for i in range(1, data.size):
         dif = abs( abs(data[i]) - target )
@@ -203,11 +203,8 @@ def buscar_coord_mas_cercana(val, data, verbose=False):
                 " / current dif: " + str(dif)
 
         if dif < closest_dif:
-            #print "viejo min:" + str(data[closest_pos]) + " - pos: " + str(closest_pos)
             closest_pos = i
             closest_dif = dif
-            #print "nuevo min:" + str(data[closest_pos]) + " - pos: " + str(closest_pos)
-            #print " -------------------------------------------------------------"
 
     return {
         'pos' : closest_pos,
@@ -366,18 +363,3 @@ def get_lat_long():
         return result
 
     return False
-
-# file = abrir_archivo_datos()
-# if file <> False:
-#     #pprint(vars(file.dimensions))
-#     #pprint(file.dimensions)
-#     temp = file.variables['temperature'];
-#     pprint(temp.size)
-#     #pprint(temp.units)
-#     pprint(temp[0].size)
-#     pprint(temp[0][0].size)
-#     pprint(temp[0][0][0].size)
-#     pprint(temp.ncattrs)
-#     #pprint(temp[0][0].tolist())
-#     #pprint(file.file_format)
-#     #print file.dimensions.values()
