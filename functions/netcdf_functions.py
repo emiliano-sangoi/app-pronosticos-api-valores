@@ -266,10 +266,72 @@ def get_serie(variable, la, lo):
             #'si_unidad' : str(variable_obj.units),
             # tiempo de medicion:
             'issued_time' : int(issued_time.strftime('%s')),
+            # variable que indica si las coordenadas estan dentro del rango del cual se conoce informacion
+            'dentro_del_rango': is_dentro(la, lo),
             'msg' : '' if nulos == 0 else 'Algunos valores son nulos. Esto se debe a que algunos valores no se conocen o no han sido pronosticados para las coordenadas requeridas.'
         }
     return False
 
+
+def get_series(la, lo):
+    fileHandler = abrir_archivo_datos()
+    if fileHandler <> False:
+        variables = ["precip", "temp", "vientou", "vientov"]
+        if len(variables) == 0:
+            return False
+        lat = fileHandler.variables['lat']
+        lon = fileHandler.variables['lon']
+        json.dumps(la)
+        closest_lat = buscar_coord_mas_cercana(la, lat)
+        closest_lon = buscar_coord_mas_cercana(lo, lon)
+        if closest_lat and closest_lon:
+
+            xp = closest_lon['pos']
+            yp = closest_lat['pos']
+            series = dict();
+
+            for nom_variable in variables:
+                serie = dict();
+                time = fileHandler.variables['time']
+                step = 0
+                nulos = 0
+                variables_obj = fileHandler.get_variables_by_attributes(name=nom_variable)
+                variable_obj = variables_obj.pop()
+                for i in range(0, time.size):
+                    v = variable_obj[i][xp][yp]
+                    if v is ma.masked:
+                        v = 'null'
+                        nulos = nulos + 1
+                        break
+
+                    serie[step] = str(v);
+                    step += 3
+                series[nom_variable] = serie;
+
+            issued_time = get_version_archivo_datos(True);
+        return {
+            # latitud ingresada como parametro:
+            'lat_ingresada': la,
+            # longitud ingresada como parametro:
+            'long_ingresada': lo,
+            # latitud mas cercana a la latitud ingresada:
+            'lat_ref': closest_lat['valor'],
+            # longitud mas cercana a la longitud ingresada:
+            'lng_ref': closest_lon['valor'],
+            # posicion de la latitud encontrada en en el vector:
+            'lat_ref_pos': closest_lat['pos'],
+            # posicion de la longitud encontrada en en el vector:
+            'lng_ref_pos': closest_lon['pos'],
+            # valores pronosticados:
+            'series': series,
+            # variable que indica si las coordenadas estan dentro del rango del cual se conoce informacion
+            'dentro_del_rango': is_dentro(la, lo),
+            # 'si_unidad' : str(variable_obj.units),
+            # tiempo de medicion:
+            'issued_time': int(issued_time.strftime('%s')),
+            'msg': '' if nulos == 0 else 'Algunos valores son nulos. Esto se debe a que algunos valores no se conocen o no han sido pronosticados para las coordenadas requeridas.'
+        }
+    return False
 
 
 
