@@ -288,9 +288,8 @@ def get_series(la, lo):
             series = dict();
 
             for nom_variable in variables:
-                serie = dict();
+                serie = [];
                 time = fileHandler.variables['time']
-                step = 0
                 nulos = 0
                 variables_obj = fileHandler.get_variables_by_attributes(name=nom_variable)
                 variable_obj = variables_obj.pop()
@@ -301,8 +300,7 @@ def get_series(la, lo):
                         nulos = nulos + 1
                         break
 
-                    serie[step] = str(v);
-                    step += 3
+                    serie.append(str(v));
                 series[nom_variable] = serie;
 
             issued_time = get_version_archivo_datos(True);
